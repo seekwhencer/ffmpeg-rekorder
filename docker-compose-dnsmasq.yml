@@ -1,0 +1,19 @@
+version: '3.0'
+
+services:
+
+  dnsmasq:
+    restart: always
+    build: ./dnsmasq/.
+    container_name: ${PROJECT_NAME}_dnsmasq
+    command: >
+      --no-daemon
+      -dd
+    #      --log-queries
+    cap_add:
+      - NET_ADMIN
+    network_mode: host
+    volumes:
+      - ./dnsmasq/dnsmasq.conf:/etc/dnsmasq.conf
+      - ./dnsmasq/dnsmasq.leases:/var/lib/misc/dnsmasq.leases
+      - ./dnsmasq/dnsmasq.d:/etc/dnsmasq.d:rw

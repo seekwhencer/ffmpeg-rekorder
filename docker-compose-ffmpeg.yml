@@ -1,0 +1,14 @@
+version: '3.6'
+
+services:
+
+  ffmpeg:
+    image: linuxserver/ffmpeg:latest
+    container_name: ${PROJECT_NAME}_ffmpeg
+    #entrypoint: /bin/bash
+    command: "/rekorder/ffmpeg/capture.sh"
+    #command: "tail -f /dev/null"
+    restart: always
+    volumes:
+      - ${HOST_STORE_ROOT_PATH}:${STORE_ROOT_PATH}
+      - ./:/rekorder

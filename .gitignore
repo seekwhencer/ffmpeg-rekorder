@@ -1,0 +1,7 @@
+.idea
+.env
+*.conf
+node_modules
+
+!app/config/example.conf
+!app/config/streams/example.conf

@@ -1,0 +1,28 @@
+version: "3.6"
+
+services:
+
+  rekorder:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    image: ${PROJECT_NAME}_app
+    restart: always
+    container_name: ${PROJECT_NAME}_app
+    working_dir: /rekorder/app
+    command: 'tail -f /dev/null'
+    #command: "--experimental-modules --experimental-json-modules index.js"
+    #entrypoint: /bin/bash
+    #command: "node --experimental-modules --experimental-json-modules index.js"
+    user: root
+    volumes:
+      - .:/rekorder
+      - /rekorder/app/node_modules
+      - /rekorder/shared/node_modules
+      - ${HOST_STORE_ROOT_PATH}:${STORE_ROOT_PATH}
+    environment:
+      - DEBUG=true
+      - ENVIRONMENT=default
+      - NODE_ENV=development
+      - PWD=/rekorder/app
+
