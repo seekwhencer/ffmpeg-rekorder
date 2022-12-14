@@ -88,8 +88,8 @@ export default class Module extends Events {
         // convert the keys from uppercase with underscore between the words,
         // feed ist with keys like: "STREAM_URL" and convert ist to fields like: "streamUrl" (pascal case)
         Object.keys(options).forEach(k => {
-            const pc = k.split('_').map((p, i) => i > 0 ? p.charAt(0).toUpperCase() + p.slice(1) : p.toLowerCase()); // whooohaaaa
-            this[pc] = options[pc];
+            const pc = k.split('_').map((p, i) => i > 0 ? p.charAt(0).toUpperCase() + p.slice(1) : p.toLowerCase()).join(''); // whooohaaaa
+            this[pc] = options[k];
         });
     }
 

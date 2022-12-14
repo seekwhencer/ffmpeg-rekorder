@@ -8,16 +8,25 @@ export default class FFmpegStream extends MODULECLASS {
 
         this.recording = false;
         this.bin = '/usr/local/bin/ffmpeg';
-        this.checkInerval = 10000; // ms
-
         this.registerOptionsAsFields(options);
+
+        this.checkInerval = this.checkInerval || 10000; // ms
         this.id = this.createHash(this.name);
+
+        this.streamUrl = this.streamUrl || false;
+
+        if (!this.streamUrl)
+            return Promise.resolve();
 
         this.autoRecord = this.autoRecord || true;
 
         this.mqttEnable = this.mqttEnable || true;
         this.mqttTopic = this.mqttTopic || `sensors/camera/${this.name.toLowerCase()}`;
         this.mqttControlTopic = this.mqttControlTopic || `control/camera/${this.name.toLowerCase()}/enable`;
+        this.mqttTopicValueOn = this.mqttTopicValueOn || '1';
+        this.mqttTopicValueOff = this.mqttTopicValueOff || '0';
+        this.mqttControlTopicValueOn = this.mqttControlTopicValueOn || '1';
+        this.mqttControlTopicValueOff = this.mqttControlTopicValueOff || '0';
 
         this.snapshotPath = `${STORE_ROOT_PATH}/${this.name}`;
         this.snapshotFilePath = `${this.snapshotPath}/snapshot.png`;
@@ -32,6 +41,7 @@ export default class FFmpegStream extends MODULECLASS {
             fs
                 .access(this.snapshotFilePath, fs.constants.F_OK)
                 .then(() => {
+
                     this.available = true; // <- THIS IS THE TRIGGER
                     return fs.unlink(this.snapshotFilePath);
                 })
@@ -81,7 +91,7 @@ export default class FFmpegStream extends MODULECLASS {
             if (topic !== this.controlTopic)
                 return;
 
-            buffer.toString() === '1' ? this.enabled = true : this.enabled = false;
+            buffer.toString() === this.mqttControlTopicValueOn ? this.enabled = true : this.enabled = false;
             LOG(this.label, 'GOT MESSAGE:', buffer.toString(), 'ON', topic);
         });
 
@@ -89,7 +99,7 @@ export default class FFmpegStream extends MODULECLASS {
             LOG(this.label, 'INIT', this.name, this.id);
 
             // enable the cam by a self instructed mqtt message
-            this.publish(this.mqttControlTopic, '1');
+            this.publish(this.mqttControlTopic, this.mqttControlTopicValueOn);
 
             // check on startup if all cams are available
             this.checkAvailable();
@@ -127,7 +137,7 @@ export default class FFmpegStream extends MODULECLASS {
             "-i", this.streamUrl,
             "-vcodec", "copy",
             "-f", "segment",
-            "-segmentTime", this.segmentTime,
+            "-segment_time", this.segmentTime,
 //            "-reconnect_on_network_error", "1",
 //            "-reconnect_at_eof", "1",
 //            "-reconnect_streamed", "1",
