@@ -22,7 +22,7 @@ git clone git@github.com:seekwhencer/ffmpeg-rekorder.git
 - from `.env.example` to `.env`
 - from `dnsmasq/example.conf` to `dnsmasq/dnsmasq.conf`
 - from `app/config/example.conf` to `app/config/default.conf` 
-- from `app/config/streams/example.conf` to `app/config/streams/mycam1.conf`
+- from `app/config/streams/conf.example` to `app/config/streams/mycam1.conf`
 
 #### Edit
 

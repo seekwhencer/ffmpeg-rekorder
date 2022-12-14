@@ -79,7 +79,18 @@ export default class Module extends Events {
     }
 
     registerOptionsAsFields(options) {
-        Object.keys(options).forEach(k => !this[k] ? this[k] = options[k] : null);
+        Object.keys(options).forEach(k => {
+            //
+            options[k] === '1' || options[k] === 'yes' || options[k] === 'true' ? options[k] = true : null;
+            options[k] === '0' || options[k] === 'no' || options[k] === 'false' ? options[k] = false : null;
+        });
+
+        // convert the keys from uppercase with underscore between the words,
+        // feed ist with keys like: "STREAM_URL" and convert ist to fields like: "streamUrl" (pascal case)
+        Object.keys(options).forEach(k => {
+            const pc = k.split('_').map((p, i) => i > 0 ? p.charAt(0).toUpperCase() + p.slice(1) : p.toLowerCase()); // whooohaaaa
+            this[pc] = options[pc];
+        });
     }
 
     createHash(seed) {

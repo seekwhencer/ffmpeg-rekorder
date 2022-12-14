@@ -16,7 +16,7 @@ export default class FFmpeg extends MODULECLASS {
             };
             new FFmpegStreams(this, streamsOptions).then(streams => {
                 this.streams = streams;
-                LOG(this.label, 'PROPS', Object.getOwnPropertyNames(this.streams));
+                //LOG(this.label, 'PROPS', Object.getOwnPropertyNames(this.streams));
 
                 resolve(this);
             });

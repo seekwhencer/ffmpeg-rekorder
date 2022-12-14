@@ -6,14 +6,14 @@ export default class FFmpegStream extends MODULECLASS {
         super(parent, options);
         this.label = 'FFMPEG STREAM';
 
-        this.enabled = true;
         this.recording = false;
         this.bin = '/usr/local/bin/ffmpeg';
         this.checkInerval = 10000; // ms
-        this.autoRecord = false;
 
         this.registerOptionsAsFields(options);
         this.id = this.createHash(this.name);
+
+        this.autoRecord = this.autoRecord || true;
 
         this.topic = `sensors/camera/${this.name.toLowerCase()}`;
         this.controlTopic = `control/camera/${this.name.toLowerCase()}/enable`;
@@ -22,31 +22,27 @@ export default class FFmpegStream extends MODULECLASS {
         this.snapshotFilePath = `${this.snapshotPath}/snapshot.png`;
 
         this.recordPath = `${STORE_ROOT_PATH}/${this.name}`;
-        this.recordFileName = `${this.file_prefix}_${this.name}.mp4`;
+        this.recordFileName = `${this.filePrefix}_${this.name}.mp4`;
         this.recordFilePath = `${this.recordPath}/${this.recordFileName}`;
         this.recordProcess = false;
 
         // if a snapshot was saved - or not
-        this.on('check', (dataOut, dataErr) => {
+        this.on('checked', (dataOut, dataErr) => {
             fs
                 .access(this.snapshotFilePath, fs.constants.F_OK)
                 .then(() => {
-                    this.active = true; // <- THIS IS THE TRIGGER
+                    this.available = true; // <- THIS IS THE TRIGGER
                     return fs.unlink(this.snapshotFilePath);
                 })
-                .then(() => {
-                    //LOG(this.label, 'DELETED SNAPSHOT:', this.snapshotFilePath);
-                    return Promise.resolve();
-                })
                 .catch(err => {
-                    this.active = false;
+                    this.available = false;
                     return Promise.resolve();
                 });
         });
 
         // when the cam is available
-        this.on('active', () => {
-            LOG(this.label, this.name, '- - - ACTIVE - - -');
+        this.on('available', () => {
+            LOG(this.label, this.name, '- - - IS AVAILABLE NOW - - -');
 
             if (!this.autoRecord)
                 return;
@@ -56,17 +52,21 @@ export default class FFmpegStream extends MODULECLASS {
         });
 
         // when the cam is not available
-        this.on('inactive', () => {
-            LOG(this.label, this.name, '- - - INACTIVE - - -', typeof this.recordProcess);
+        this.on('lost', () => {
+            LOG(this.label, this.name, '- - - IS NOT AVAILABLE NOW - - -', typeof this.recordProcess);
             this.stop();
             this.publish(this.topic, 0);
         });
 
+        this.on('enabled', () => this.record());
+        this.on('disabled', () => this.stop());
+
         this.on('recording', () => {
+            LOG(this.label, 'RECORDING...');
             this.recording = true;
         });
-
         // when the ffmpeg process ends
+
         this.on('stop', (dataOut, dataErr) => {
             LOG(this.label, this.name, 'STOP', dataOut, dataErr);
             this.recording = false;
@@ -82,12 +82,10 @@ export default class FFmpegStream extends MODULECLASS {
 
             buffer.toString() === '1' ? this.enabled = true : this.enabled = false;
             LOG(this.label, 'GOT MESSAGE:', buffer.toString(), 'ON', topic);
-            this.enabled && this.active ? this.record() : this.stop();
         });
 
         return new Promise((resolve, reject) => {
             LOG(this.label, 'INIT', this.name, this.id);
-            LOG(this.label, this.snapshotFilePath);
 
             // enable the cam by a self instructed mqtt message
             this.publish(this.controlTopic, '1');
@@ -103,31 +101,32 @@ export default class FFmpegStream extends MODULECLASS {
     }
 
     checkAvailable() {
-        if (!this.enabled) {
+        if (!this.enabled)
             return;
-        }
-        LOG(this.label, 'CHECK', this.name, 'ENABLED:', this.enabled);
+
+        LOG(this.label, 'CHECK IF', this.name, 'IS AVAILABLE');
 
         let dataOut = '', dataErr = '';
-        const params = ["-y", "-frames", "1", this.snapshotFilePath, '-stimeout', '2000', '-rtsp_transport', 'tcp', '-i', this.stream_url];
+        const params = ["-y", "-frames", "1", this.snapshotFilePath, '-stimeout', '2000', '-rtsp_transport', 'tcp', '-i', this.streamUrl];
         const process = spawn(this.bin, params);
         process.stdout.on('data', chunk => dataOut += chunk);
         process.stderr.on('data', chunk => dataErr += chunk);
-        process.stdout.on('end', () => this.emit('check', dataOut, dataErr));
+        process.stdout.on('end', () => this.emit('checked', dataOut, dataErr));
     }
 
     record() {
         if (this.recordProcess)
             this.stop();
 
-        LOG(this.label, 'RECORDING...');
+        if (!this.available)
+            return;
 
         let dataOut = '', dataErr = '', dataIn = '';
         const params = [
-            "-i", this.stream_url,
+            "-i", this.streamUrl,
             "-vcodec", "copy",
             "-f", "segment",
-            "-segment_time", this.segment_time,
+            "-segmentTime", this.segmentTime,
 //            "-reconnect_on_network_error", "1",
 //            "-reconnect_at_eof", "1",
 //            "-reconnect_streamed", "1",
@@ -159,16 +158,15 @@ export default class FFmpegStream extends MODULECLASS {
     }
 
     stop() {
-        if(this.recordProcess) {
-//            this.recordProcess.kill('SIGTERM');
-//            this.recordProcess.kill('SIGTERM');
-        }
+        if (!this.recordProcess)
+            return;
+
+        if (!this.available)
+            return;
 
         LOG(this.label, 'STOPPING...', this.recordProcess.pid);
- //       this.recordProcess ? this.recordProcess.stdin.write('q') : null;
         this.recordProcess ? this.recordProcess.kill('SIGINT') : null;
         this.enabled = false;
-        //setTimeout(() => this.recordProcess = false, 5000);
     }
 
     publish(topic, value) {
@@ -181,15 +179,27 @@ export default class FFmpegStream extends MODULECLASS {
         APP.MQTT.subscribe(this.controlTopic);
     }
 
-    get active() {
-        return this._active;
+    get available() {
+        return this._available || false;
     }
 
-    set active(val) {
-        if (val === this.active)
+    set available(val) {
+        if (val === this.available)
             return;
 
-        this._active = val;
-        this.active ? this.emit('active') : this.emit('inactive');
+        this._available = val;
+        this.available ? this.emit('available') : this.emit('lost');
+    }
+
+    get enabled() {
+        return this._enabled;
+    }
+
+    set enabled(val) {
+        if (val === this.enabled)
+            return;
+
+        this._enabled = val;
+        this.enabled ? this.emit('enabled') : this.emit('disabled');
     }
 }

@@ -67,7 +67,7 @@ export default class FFmpegStreams extends MODULECLASS {
     getConfigFiles() {
         return new Promise((resolve, reject) => {
             try {
-                fs.readdir(this.configsPath).then(files => resolve(files));
+                fs.readdir(this.configsPath).then(files => resolve(files.filter(f => f.match(/\.conf$/) !== null)));
             } catch (err) {
                 console.error(err);
                 reject(err);
