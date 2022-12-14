@@ -20,12 +20,14 @@ git clone git@github.com:seekwhencer/ffmpeg-rekorder.git
 
 #### Duplicate  
 - from `.env.example` to `.env`
+- from `dnsmasq/example.conf` to `dnsmasq/dnsmasq.conf`
 - from `app/config/example.conf` to `app/config/default.conf` 
 - from `app/config/streams/example.conf` to `app/config/streams/mycam1.conf`
 
 #### Edit
 
-- your `.env` file and your camera configs in `app/config/streams/`
+- all duplicated files with your own settings
+- to create multiple stream configs, create `mycam1.conf`, `mycam2.conf`, `...` in `app/config/streams/`
 
 #### Run
 
@@ -38,6 +40,7 @@ chmod +x ./setup.sh
 
 #### simply
 ```bash
+chmod +x ./up.sh
 ./up.sh
 ```
 

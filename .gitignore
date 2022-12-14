@@ -5,3 +5,4 @@ node_modules
 
 !app/config/example.conf
 !app/config/streams/example.conf
+!dnsmasq/example.conf
