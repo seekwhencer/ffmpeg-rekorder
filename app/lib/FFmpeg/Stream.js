@@ -15,8 +15,9 @@ export default class FFmpegStream extends MODULECLASS {
 
         this.autoRecord = this.autoRecord || true;
 
-        this.topic = `sensors/camera/${this.name.toLowerCase()}`;
-        this.controlTopic = `control/camera/${this.name.toLowerCase()}/enable`;
+        this.mqttEnable = this.mqttEnable || true;
+        this.mqttTopic = this.mqttTopic || `sensors/camera/${this.name.toLowerCase()}`;
+        this.mqttControlTopic = this.mqttControlTopic || `control/camera/${this.name.toLowerCase()}/enable`;
 
         this.snapshotPath = `${STORE_ROOT_PATH}/${this.name}`;
         this.snapshotFilePath = `${this.snapshotPath}/snapshot.png`;
@@ -48,14 +49,14 @@ export default class FFmpegStream extends MODULECLASS {
                 return;
 
             this.record();
-            this.publish(this.topic, 1);
+            this.publish(this.mqttTopic, 1);
         });
 
         // when the cam is not available
         this.on('lost', () => {
             LOG(this.label, this.name, '- - - IS NOT AVAILABLE NOW - - -', typeof this.recordProcess);
             this.stop();
-            this.publish(this.topic, 0);
+            this.publish(this.mqttTopic, 0);
         });
 
         this.on('enabled', () => this.record());
@@ -88,7 +89,7 @@ export default class FFmpegStream extends MODULECLASS {
             LOG(this.label, 'INIT', this.name, this.id);
 
             // enable the cam by a self instructed mqtt message
-            this.publish(this.controlTopic, '1');
+            this.publish(this.mqttControlTopic, '1');
 
             // check on startup if all cams are available
             this.checkAvailable();
@@ -170,13 +171,19 @@ export default class FFmpegStream extends MODULECLASS {
     }
 
     publish(topic, value) {
+        if (!this.mqttEnable || !this.mqttTopic)
+            return;
+
         LOG(this.label, 'PUBLISH', topic, value);
         APP.MQTT.publish(topic, `${value}`);
     }
 
     subscribeControl() {
-        LOG(this.label, 'SUBSCRIBE', this.controlTopic);
-        APP.MQTT.subscribe(this.controlTopic);
+        if (!this.mqttEnable || !this.mqttControlTopic)
+            return;
+
+        LOG(this.label, 'SUBSCRIBE', this.mqttControlTopic);
+        APP.MQTT.subscribe(this.mqttControlTopic);
     }
 
     get available() {
