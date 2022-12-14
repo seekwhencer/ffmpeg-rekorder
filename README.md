@@ -29,7 +29,34 @@ git clone git@github.com:seekwhencer/ffmpeg-rekorder.git
 - all duplicated files with your own settings
 - to create multiple stream configs, create `mycam1.conf`, `mycam2.conf`, `...` in `app/config/streams/`
 
-#### Run
+#### Network
+
+- edit network config
+```bash
+sudo nano /etc/network/interfaces
+```
+- add this
+```
+source /etc/network/interfaces.d/*
+```
+- create eth1 config
+```
+sudo nano /etc/network/interface.d/eth1.conf
+```
+- add (and change) this
+```
+auto eth1
+allow-hotplug eth1
+iface eth1 inet static
+address 192.168.179.1
+netmask 255.255.255.0
+gateway 192.168.179.1
+broadcast 192.168.179.255
+dns-nameservers 192.168.179.1
+```
+
+
+#### Run setup
 
 ```bash
 chmod +x ./setup.sh
