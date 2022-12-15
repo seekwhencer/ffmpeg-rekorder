@@ -10,7 +10,8 @@ export default class FFmpegStream extends MODULECLASS {
         this.bin = '/usr/local/bin/ffmpeg';
         this.registerOptionsAsFields(options);
 
-        this.checkInerval = this.checkInerval || 10000; // ms
+        this.checkIntervalDuration = this.checkIntervalDuration || 10000; // ms
+        this.checkInterval = false;
         this.id = this.createHash(this.name);
 
         this.streamUrl = this.streamUrl || false;
@@ -36,6 +37,27 @@ export default class FFmpegStream extends MODULECLASS {
         this.recordFilePath = `${this.recordPath}/${this.recordFileName}`;
         this.recordProcess = false;
         this.snapshotProcess = false;
+
+
+        /**
+         * Events
+         */
+        this.on('enabled', () => {
+            LOG(this.label, 'ENABLED:', this.name);
+            if (!this.available) {
+                this.checkAvailable();
+                clearInterval(this.checkInterval);
+                this.checkInterval = setInterval(() => this.checkAvailable(), this.checkIntervalDuration);
+            } else {
+                this.record();
+            }
+        });
+
+        this.on('disabled', () => {
+            LOG(this.label, 'DISABLED:', this.name);
+            this.stop();
+            this.available = false;
+        });
 
         // if a snapshot was saved - or not
         this.on('checked', (dataOut, dataErr) => {
@@ -71,20 +93,7 @@ export default class FFmpegStream extends MODULECLASS {
             LOG(this.label, this.name, '- - - IS NOT AVAILABLE NOW - - -');
             this.stop();
             this.publish(this.mqttTopic, 0);
-        });
-
-        this.on('enabled', () => {
-            LOG(this.label, 'ENABLED:', this.name);
-            if (!this.available) {
-                this.checkAvailable();
-            } else {
-                this.record();
-            }
-        });
-        this.on('disabled', () => {
-            LOG(this.label, 'DISABLED:', this.name);
-            this.stop();
-            this.available = false;
+            this.enabled = false;
         });
 
         this.on('recording', () => {
@@ -111,13 +120,15 @@ export default class FFmpegStream extends MODULECLASS {
             LOG(this.label, 'INIT', this.name, this.id);
 
             // enable the cam by a self instructed mqtt message
-            this.publish(this.mqttControlTopic, this.mqttControlTopicValueOn);
+            if (this.enable)
+                this.publish(this.mqttControlTopic, this.mqttControlTopicValueOn);
+
 
             // check on startup if all cams are available
-            this.checkAvailable();
+            //this.checkAvailable();
 
             // run the check periodically
-            setInterval(() => this.checkAvailable(), this.checkInerval);
+            //setInterval(() => this.checkAvailable(), this.checkInerval);
 
             resolve(this);
         });
@@ -192,7 +203,6 @@ export default class FFmpegStream extends MODULECLASS {
         LOG(this.label, 'STOPPING...', 'PID:', this.recordProcess.pid);
         this.recordProcess.kill('SIGINT');
         setTimeout(() => this.recordProcess = false, 2000);
-        this.enabled = false;
     }
 
     publish(topic, value) {
@@ -211,6 +221,18 @@ export default class FFmpegStream extends MODULECLASS {
         APP.MQTT.subscribe(this.mqttControlTopic);
     }
 
+    get enabled() {
+        return this._enabled;
+    }
+
+    set enabled(val) {
+        if (val === this.enabled)
+            return;
+
+        this._enabled = val;
+        this.enabled ? this.emit('enabled') : this.emit('disabled');
+    }
+
     get available() {
         return this._available || false;
     }
@@ -223,15 +245,4 @@ export default class FFmpegStream extends MODULECLASS {
         this.available ? this.emit('available') : this.emit('lost');
     }
 
-    get enabled() {
-        return this._enabled;
-    }
-
-    set enabled(val) {
-        if (val === this.enabled)
-            return;
-
-        this._enabled = val;
-        this.enabled ? this.emit('enabled') : this.emit('disabled');
-    }
 }
