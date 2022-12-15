@@ -20,15 +20,17 @@ export default class MqttClient extends MODULECLASS {
                 }
             }
 
-            // events
-            this.on('connect', () => {
-                //this.publish('app', 'welcome');
-                resolve(this);
-            });
+            // connect event
+            this.on('connect', () => resolve(this));
 
+            // message event
             this.on('message', (topic, buffer) => {
                 this.message(topic, buffer);
                 this.parent.emit('message', topic, buffer);
+
+                // any incoming topic equals an event name
+                // data is a string
+                this.parent.emit(topic, buffer.toString());
             });
 
             // connect finally
@@ -48,9 +50,6 @@ export default class MqttClient extends MODULECLASS {
         this.connection.on('offline', () => this.emit('offline'));
         this.connection.on('error', (error) => this.emit('error', error));
         this.connection.on('message', (topic, buffer) => this.emit('message', topic, buffer));
-
-        // subscribe all topics
-        // this.subscribe('#');
     }
 
     subscribe(topic) {
