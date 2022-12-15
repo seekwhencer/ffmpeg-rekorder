@@ -39,6 +39,9 @@ export default class FFmpegStream extends MODULECLASS {
 
         // if a snapshot was saved - or not
         this.on('checked', (dataOut, dataErr) => {
+            if (!this.enabled)
+                return;
+
             fs
                 .access(this.snapshotFilePath, fs.constants.F_OK)
                 .then(() => {
