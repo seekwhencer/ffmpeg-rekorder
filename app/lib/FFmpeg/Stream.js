@@ -19,11 +19,8 @@ export default class FFmpegStream extends MODULECLASS {
         if (!this.streamUrl)
             return Promise.resolve();
 
-        this.autoRecord = this.autoRecord || true;
-
         this.mqttEnable = this.mqttEnable || true;
         this.mqttTopic = this.mqttTopic || `sensors/camera/${this.name.toLowerCase()}`;
-        this.mqttControlTopic = this.mqttControlTopic || `control/camera/${this.name.toLowerCase()}/enable`;
         this.mqttTopicValueOn = this.mqttTopicValueOn || '1';
         this.mqttTopicValueOff = this.mqttTopicValueOff || '0';
         this.mqttControlTopicValueOn = this.mqttControlTopicValueOn || '1';
@@ -35,9 +32,9 @@ export default class FFmpegStream extends MODULECLASS {
         this.recordPath = `${STORE_ROOT_PATH}/${this.name}`;
         this.recordFileName = `${this.filePrefix}_${this.name}.mp4`;
         this.recordFilePath = `${this.recordPath}/${this.recordFileName}`;
+
         this.recordProcess = false;
         this.snapshotProcess = false;
-
 
         /**
          * Events
@@ -45,8 +42,8 @@ export default class FFmpegStream extends MODULECLASS {
         this.on('enabled', () => {
             LOG(this.label, 'ENABLED:', this.name);
             if (!this.available) {
+                this.checkInterval ? clearInterval(this.checkInterval) : null;
                 this.checkAvailable();
-                clearInterval(this.checkInterval);
                 this.checkInterval = setInterval(() => this.checkAvailable(), this.checkIntervalDuration);
             } else {
                 this.record();
@@ -93,7 +90,7 @@ export default class FFmpegStream extends MODULECLASS {
             LOG(this.label, this.name, '- - - IS NOT AVAILABLE NOW - - -');
             this.stop();
             this.publish(this.mqttTopic, 0);
-            this.enabled = false;
+            this.disable();
         });
 
         this.on('recording', () => {
@@ -111,27 +108,38 @@ export default class FFmpegStream extends MODULECLASS {
         this.subscribeControl();
 
         // when a control instruction comes
-        APP.MQTT.on(this.mqttControlTopic, data => {
-            LOG(this.label, 'GOT MESSAGE:', data, 'ON', this.mqttControlTopic);
-            data === this.mqttControlTopicValueOn ? this.enabled = true : this.enabled = false;
+        APP.MQTT.on(this.mqttControlTopicEnable, data => {
+            LOG(this.label, 'GOT MESSAGE:', data, 'ON', this.mqttControlTopicEnable);
+            data === this.mqttControlTopicValueOn ? this.enable() : this.disable();
+        });
+
+        // when a control instruction comes
+        APP.MQTT.on(this.mqttControlTopicRecord, data => {
+            LOG(this.label, 'GOT MESSAGE:', data, 'ON', this.mqttControlTopicRecord);
+            data === this.mqttControlTopicValueOn ? this.record() : this.stop();
         });
 
         return new Promise((resolve, reject) => {
             LOG(this.label, 'INIT', this.name, this.id);
-
-            // enable the cam by a self instructed mqtt message
-            if (this.enable)
-                this.publish(this.mqttControlTopic, this.mqttControlTopicValueOn);
-
-
-            // check on startup if all cams are available
-            //this.checkAvailable();
-
-            // run the check periodically
-            //setInterval(() => this.checkAvailable(), this.checkInerval);
-
+            this.enabled ? this.emit('enabled') : null;
             resolve(this);
         });
+    }
+
+    enable() {
+        if (this.enabled === true)
+            return;
+
+        this.enabled = true;
+        this.emit('enabled');
+    }
+
+    disable() {
+        if (this.enabled === false)
+            return;
+
+        this.enabled = false;
+        this.emit('disabled');
     }
 
     checkAvailable() {
@@ -214,23 +222,11 @@ export default class FFmpegStream extends MODULECLASS {
     }
 
     subscribeControl() {
-        if (!this.mqttEnable || !this.mqttControlTopic)
+        if (!this.mqttEnable)
             return;
 
-        LOG(this.label, 'SUBSCRIBE', this.mqttControlTopic);
-        APP.MQTT.subscribe(this.mqttControlTopic);
-    }
-
-    get enabled() {
-        return this._enabled;
-    }
-
-    set enabled(val) {
-        if (val === this.enabled)
-            return;
-
-        this._enabled = val;
-        this.enabled ? this.emit('enabled') : this.emit('disabled');
+        this.mqttControlTopicEnable ? APP.MQTT.subscribe(this.mqttControlTopicEnable) : null;
+        this.mqttControlTopicRecord ? APP.MQTT.subscribe(this.mqttControlTopicRecord) : null;
     }
 
     get available() {
