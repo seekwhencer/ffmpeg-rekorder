@@ -185,12 +185,12 @@ docker-compose -f docker-compose-app.yml up -d
 
 ## Hardware
 
-- Raspberry Pi 4
-- 16 GB SSD min. internal
-- SATA to USB 3
-- Ethernet to USB 3
-- External SSD
-- POE Switch
+- [Raspberry Pi 4](https://geizhals.de/raspberry-pi-4-modell-b-a2301761.html)
+- [16 GB SSD min. internal](https://geizhals.de/?cat=sm_sdhc&xf=307_16)
+- [SATA to USB 3](https://www.amazon.de/gp/product/B011M8YACM/ref=ppx_yo_dt_b_asin_title_o07_s00?ie=UTF8&th=1)
+- [Ethernet to USB 3](https://www.amazon.de/gp/product/B09HGZ2XXQ/ref=ppx_yo_dt_b_asin_title_o06_s00?ie=UTF8&psc=1)
+- [External SSD](https://geizhals.de/?cat=hdssd&xf=252_1000%7E4836_2)
+- [POE Switch](https://geizhals.de/?cat=switchgi&xf=13169_PoE+PD&sort=p#productlist)
 
 ## Scenario use case
 
