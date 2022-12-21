@@ -22,6 +22,9 @@ export default class FFmpegStreams extends MODULECLASS {
             // ...
 
             this.registerPrivates();
+
+            // important! the return is the streams array
+            // this class is accessible: this.items.root
             resolve(this.items);
         });
     }
@@ -49,7 +52,6 @@ export default class FFmpegStreams extends MODULECLASS {
             this.items);
 
         this.private('root', this.items, this);
-        //this.private('hossa', this.items, this.hossa); // hossa must be an arrow function
     }
 
 

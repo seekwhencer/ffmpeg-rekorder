@@ -1,5 +1,6 @@
 import {spawn} from 'child_process';
 import fs from 'fs-extra';
+import Storage from './Storage.js';
 
 export default class FFmpegStream extends MODULECLASS {
     constructor(parent, options) {
@@ -11,8 +12,11 @@ export default class FFmpegStream extends MODULECLASS {
         this.registerOptionsAsFields(options);
 
         this.checkIntervalDuration = this.checkIntervalDuration || 10000; // ms
+
         this.checkInterval = false;
         this.id = this.createHash(this.name);
+
+        LOG(this.label, 'INIT', this.name, this.id);
 
         this.streamUrl = this.streamUrl || false;
 
@@ -35,6 +39,9 @@ export default class FFmpegStream extends MODULECLASS {
 
         this.recordProcess = false;
         this.snapshotProcess = false;
+
+        this.storageAge = this.storageAge || STORAGE_AGE;
+        this.storage = new Storage(this);
 
         /**
          * Events
@@ -120,7 +127,6 @@ export default class FFmpegStream extends MODULECLASS {
         });
 
         return new Promise((resolve, reject) => {
-            LOG(this.label, 'INIT', this.name, this.id);
             this.enabled ? this.emit('enabled') : null;
             resolve(this);
         });
