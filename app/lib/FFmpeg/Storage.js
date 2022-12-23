@@ -15,8 +15,8 @@ export default class extends MODULECLASS {
 
         LOG(this.label, 'INIT');
 
-        this.checkAge();
-        setInterval(() => this.checkAge(), 60000);
+        //this.checkAge(); // do it later
+        setInterval(() => this.checkAge(), 60000); // this is fixed ;) every minute.
 
         this.on('data', files => {
 
@@ -34,7 +34,7 @@ export default class extends MODULECLASS {
                 };
             });
 
-            LOG(this.label, 'GOT', this.files.length, 'FILES FOR STREAM', this.stream.name, 'IN', this.stream.recordPath, 'TO DROP', this.files.filter(f => f.toDrop).length);
+            LOG(this.label, this.stream.name, 'GOT', this.files.length, 'FILES IN', this.stream.recordPath, 'TO DROP', this.files.filter(f => f.toDrop).length);
 
             // finally ;)
             this.dropFiles();
@@ -44,7 +44,7 @@ export default class extends MODULECLASS {
     dropFiles() {
         LOG(this.label, this.stream.name, 'DROPPING FILES IF NECESSARY');
         this.files.filter(f => f.toDrop).forEach(file => {
-            LOG(this.label, 'DROPPING', file.filePath);
+            LOG(this.label, this.stream.name, 'DROPPING', file.filePath);
             fs.remove(file.filePath);
         });
     }
@@ -120,7 +120,7 @@ export default class extends MODULECLASS {
                                     });
 
                                     if (recursive === true || level < depth) {
-                                        LOG(this.label, 'DEPTH PATH', level, itemPath);
+                                        LOG(this.label, this.stream.name, 'DEPTH PATH', level, itemPath);
                                         item.childs = walk(itemPath, recursive, level + 1);
                                     }
 
@@ -148,18 +148,18 @@ export default class extends MODULECLASS {
                             }
 
                         } catch (err) {
-                            LOG('NOT READABLE', itemPath, err);
+                            LOG(this.label, this.stream.name, 'NOT READABLE', itemPath, err);
                             collection = walk(itemPath, recursive, level + 1);
                         }
                     } else {
-                        LOG('NOT EXISTS', itemPath);
+                        LOG(this.label, this.stream.name, 'NOT EXISTS', itemPath);
                         collection = walk(itemPath, recursive, level + 1);
                     }
 
 
                 });
             } else {
-                LOG('NOT EXISTS ', folder);
+                LOG(this.label, this.stream.name, 'NOT EXISTS ', folder);
             }
 
             return collection;

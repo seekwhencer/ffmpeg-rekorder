@@ -19,6 +19,9 @@ export default class StorageFolder extends StorageItem {
 
     }
 
+    /**
+     * @TODO from item class
+     */
     aggregate() {
         return {
             type: this.type,

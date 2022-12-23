@@ -14,7 +14,7 @@ export default class StorageItem extends MODULECLASS {
     }
 
     generateHash() {
-        let toHash = `${this.mtime}${this.options.folderName}`;
+        let toHash = `${this.isotimedate}${this.options.folderName}`;
         this.hash = Crypto.createHash('md5').update(toHash).digest("hex");
     }
 

@@ -16,7 +16,7 @@ export default class FFmpegStream extends MODULECLASS {
         this.checkInterval = false;
         this.id = this.createHash(this.name);
 
-        LOG(this.label, 'INIT', this.name, this.id);
+        LOG(this.label, this.name, 'INIT', this.id);
 
         this.streamUrl = this.streamUrl || false;
 
@@ -47,7 +47,7 @@ export default class FFmpegStream extends MODULECLASS {
          * Events
          */
         this.on('enabled', () => {
-            LOG(this.label, 'ENABLED:', this.name);
+            LOG(this.label, this.name, 'ENABLED');
             if (!this.available) {
                 this.checkInterval ? clearInterval(this.checkInterval) : null;
                 this.checkAvailable();
@@ -58,7 +58,7 @@ export default class FFmpegStream extends MODULECLASS {
         });
 
         this.on('disabled', () => {
-            LOG(this.label, 'DISABLED:', this.name);
+            LOG(this.label, this.name, 'DISABLED');
             this.stop();
             this.available = false;
         });
@@ -101,7 +101,7 @@ export default class FFmpegStream extends MODULECLASS {
         });
 
         this.on('recording', () => {
-            LOG(this.label, 'RECORDING...');
+            LOG(this.label, this.name, 'RECORDING...');
             this.recording = true;
         });
 
@@ -116,13 +116,13 @@ export default class FFmpegStream extends MODULECLASS {
 
         // when a control instruction comes
         APP.MQTT.on(this.mqttControlTopicEnable, data => {
-            LOG(this.label, 'GOT MESSAGE:', data, 'ON', this.mqttControlTopicEnable);
+            LOG(this.label, this.name, 'GOT MESSAGE:', data, 'ON', this.mqttControlTopicEnable);
             data === this.mqttControlTopicValueOn ? this.enable() : this.disable();
         });
 
         // when a control instruction comes
         APP.MQTT.on(this.mqttControlTopicRecord, data => {
-            LOG(this.label, 'GOT MESSAGE:', data, 'ON', this.mqttControlTopicRecord);
+            LOG(this.label, this.name, 'GOT MESSAGE:', data, 'ON', this.mqttControlTopicRecord);
             data === this.mqttControlTopicValueOn ? this.record() : this.stop();
         });
 
@@ -152,7 +152,7 @@ export default class FFmpegStream extends MODULECLASS {
         if (!this.enabled)
             return;
 
-        LOG(this.label, 'CHECK IF', this.name, 'IS AVAILABLE');
+        LOG(this.label, this.name, 'CHECK IF IS AVAILABLE');
 
         this.snapshotProcess ? this.snapshotProcess.kill('SIGINT') : null;
 
@@ -214,7 +214,7 @@ export default class FFmpegStream extends MODULECLASS {
         if (!this.available)
             return;
 
-        LOG(this.label, 'STOPPING...', 'PID:', this.recordProcess.pid);
+        LOG(this.label, this.name, 'STOPPING...', 'PID:', this.recordProcess.pid);
         this.recordProcess.kill('SIGINT');
         setTimeout(() => this.recordProcess = false, 2000);
     }
@@ -223,7 +223,7 @@ export default class FFmpegStream extends MODULECLASS {
         if (!this.mqttEnable || !this.mqttTopic)
             return;
 
-        LOG(this.label, 'PUBLISH', topic, value);
+        LOG(this.label, this.name, 'PUBLISH', topic, value);
         APP.MQTT.publish(topic, `${value}`);
     }
 
