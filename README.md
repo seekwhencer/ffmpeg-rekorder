@@ -112,6 +112,15 @@ chmod +x ./setup.sh
 
 - `MQTT_CLIENT_ID`  
     The mqtt client id for the app
+  
+
+- `FFMPEG_BINARY=/usr/local/bin/ffmpeg`  
+   The absolute path and filename to the ffmpeg binary
+  
+
+- `STREAMS_CONFIG_PATH=config/streams`  
+    The relative path from app path for streams config files
+
 
 ### `app/config/streams/mycam.conf` (multiple camera configs)
 - `NAME`  
@@ -216,4 +225,6 @@ docker-compose -f docker-compose-app.yml up -d
 - stop the app: **CTRL + C**
 
 ### build binary
-- docker exec ffmpeg-rekorder_app "sh /rekorder/build.sh"
+- `docker exec ffmpeg-rekorder_app "sh /rekorder/build.sh"`
+- then a file `rekorder` was created in the `app/` folder
+- use this binary
