@@ -32,6 +32,7 @@ createVolumes() {
     echo ""
 
     docker volume create ${PROJECT_NAME}_data
+    docker volume create ${PROJECT_NAME}_pkg-cache
 }
 
 

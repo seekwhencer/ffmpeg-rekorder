@@ -1,6 +1,7 @@
 {
   "boolean": [
-    "DEBUG"
+    "DEBUG",
+    "MQTT_ENABLE"
   ],
   "int": [
     "SERVER_PORT",
