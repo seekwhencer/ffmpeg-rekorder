@@ -8,9 +8,9 @@ With this setup you can:
 - start automatically recording when a camera is available
 - provide dhcp with **dnsmasq**
 - provide local network shares with **samba**
-- notify availability and active to a mqtt server
-- instruct the app per **mqtt** to enable or disable recording for a stream
-
+- notify availability and recording state to a mqtt server
+- control the app per **mqtt** to enable or disable a stream and to start stop the recording
+- define an age for the recorded files and drop them if necessary 
 
 ## Setup
 #### Get it
@@ -166,6 +166,10 @@ chmod +x ./setup.sh
 - `MQTT_TOPIC_VALUE_OFF=0`
 - `MQTT_CONTROL_VALUE_ON=1`
 - `MQTT_CONTROL_VALUE_OFF=0`
+  
+
+- `STORAGE_AGE`  
+  Is an ISO 8601 string. [Temporals](https://tc39.es/proposal-temporal/docs/duration.html)
 
 
 ## Run
@@ -198,8 +202,15 @@ docker-compose -f docker-compose-app.yml up -d
 - The second ethernet is connected to the poe switch to provide connected lan clients an ip address.
 
 ## @TODO
-- life span for recordings
-- mqtt topic for availability and record state
-- configurable mqtt topics
+- fixing build pipeline for binary
 
 ## Development
+
+### start the container - but not the app
+- stop the container: `docker-compose -f docker-compose-app.yml down`
+- edit `docker-compose-app.yml`
+- change: `command: "--experimental-modules --experimental-json-modules index.js"` to `command: "tail -f /dev/null"`
+- start the container: `docker-compose -f docker-compose-app.yml up -d`
+- go into the container: `docker exec -it ffmpeg-rekorder_app /bin/bash`
+- start the app: `node --experimental-modules --experimental-json-modules index.js`
+- stop the app: **CTRL + C**
