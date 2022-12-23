@@ -13,7 +13,7 @@ export default class Config extends Module {
 
             LOG(this.label, 'INIT');
 
-            this.path = path.resolve(`${APP_DIR}/config`);
+            this.path = path.resolve(`${APP_DIR}/config`) || path.resolve(`${APP_DIR}/app/config`);
             this.typesFile = `${this.path}/types.json`;
 
             this.configFile = `${this.path}/${ENVIRONMENT}.conf`;

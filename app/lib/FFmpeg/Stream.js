@@ -8,7 +8,7 @@ export default class FFmpegStream extends MODULECLASS {
         this.label = 'FFMPEG STREAM';
 
         this.recording = false;
-        this.bin = '/usr/local/bin/ffmpeg';
+        this.bin = FFMPEG_BINARY || '/usr/local/bin/ffmpeg';
         this.registerOptionsAsFields(options);
 
         this.checkIntervalDuration = this.checkIntervalDuration || 10000; // ms
@@ -29,6 +29,7 @@ export default class FFmpegStream extends MODULECLASS {
         this.mqttTopicValueOff = this.mqttTopicValueOff || '0';
         this.mqttControlTopicValueOn = this.mqttControlTopicValueOn || '1';
         this.mqttControlTopicValueOff = this.mqttControlTopicValueOff || '0';
+        this.mqttControlOptionsTopic = this.mqttControlOptionsTopic || false;
 
         this.snapshotPath = `${STORE_ROOT_PATH}/${this.name}`;
         this.snapshotFilePath = `${this.snapshotPath}/snapshot.png`;
@@ -112,19 +113,8 @@ export default class FFmpegStream extends MODULECLASS {
         });
 
         // subscribe for the control topic
-        this.subscribeControl();
-
-        // when a control instruction comes
-        APP.MQTT.on(this.mqttControlTopicEnable, data => {
-            LOG(this.label, this.name, 'GOT MESSAGE:', data, 'ON', this.mqttControlTopicEnable);
-            data === this.mqttControlTopicValueOn ? this.enable() : this.disable();
-        });
-
-        // when a control instruction comes
-        APP.MQTT.on(this.mqttControlTopicRecord, data => {
-            LOG(this.label, this.name, 'GOT MESSAGE:', data, 'ON', this.mqttControlTopicRecord);
-            data === this.mqttControlTopicValueOn ? this.record() : this.stop();
-        });
+        this.subscribeMqttControls();
+        this.listenMqttControls();
 
         return new Promise((resolve, reject) => {
             this.enabled ? this.emit('enabled') : null;
@@ -227,12 +217,43 @@ export default class FFmpegStream extends MODULECLASS {
         APP.MQTT.publish(topic, `${value}`);
     }
 
-    subscribeControl() {
+    subscribeMqttControls() {
         if (!this.mqttEnable)
             return;
 
         this.mqttControlTopicEnable ? APP.MQTT.subscribe(this.mqttControlTopicEnable) : null;
         this.mqttControlTopicRecord ? APP.MQTT.subscribe(this.mqttControlTopicRecord) : null;
+        this.mqttControlOptionsTopic ? APP.MQTT.subscribe(`${this.mqttControlOptionsTopic}/#`) : null;
+    }
+
+    listenMqttControls() {
+        if (!this.mqttEnable)
+            return;
+
+        // when a control instruction comes
+        if (this.mqttControlTopicEnable)
+            APP.MQTT.on(this.mqttControlTopicEnable, data => {
+                LOG(this.label, this.name, 'GOT MESSAGE:', data, 'ON', this.mqttControlTopicEnable);
+                data === this.mqttControlTopicValueOn ? this.enable() : this.disable();
+            });
+
+        // when a control instruction comes
+        if (this.mqttControlTopicRecord)
+            APP.MQTT.on(this.mqttControlTopicRecord, data => {
+                LOG(this.label, this.name, 'GOT MESSAGE:', data, 'ON', this.mqttControlTopicRecord);
+                data === this.mqttControlTopicValueOn ? this.record() : this.stop();
+            });
+
+        // each available option property @TODO
+        if (this.mqttControlOptionsTopic)
+            ['property'].forEach(option => {
+                APP.MQTT.on(`${this.mqttControlOptionsTopic}/${option}`, data => {
+                    LOG(this.label, this.name, 'GOT MESSAGE:', data, 'ON', `${this.mqttControlOptionsTopic}/${option}`);
+                    this[option] = option;
+
+                    // ... or do something
+                });
+            });
     }
 
     get available() {

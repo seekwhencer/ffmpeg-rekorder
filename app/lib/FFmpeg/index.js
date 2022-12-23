@@ -6,7 +6,7 @@ export default class FFmpeg extends MODULECLASS {
         super(parent, options);
         this.label = 'FFMPEG';
 
-        this.streamConfigsPath = path.resolve(`${APP_DIR}/config/streams`);
+        this.streamConfigsPath = path.resolve(`${APP_DIR}/${STREAMS_CONFIG_PATH}`);
 
         return new Promise((resolve, reject) => {
             LOG(this.label, 'INIT');

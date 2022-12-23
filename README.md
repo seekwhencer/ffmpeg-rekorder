@@ -214,3 +214,6 @@ docker-compose -f docker-compose-app.yml up -d
 - go into the container: `docker exec -it ffmpeg-rekorder_app /bin/bash`
 - start the app: `node --experimental-modules --experimental-json-modules index.js`
 - stop the app: **CTRL + C**
+
+### build binary
+- docker exec ffmpeg-rekorder_app "sh /rekorder/build.sh"

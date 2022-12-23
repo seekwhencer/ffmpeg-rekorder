@@ -88,6 +88,8 @@ export default class extends MODULECLASS {
 
     // walk thru the disk tree and fetch it
     readFolder(folder, recursive, includes, withDirs, depth) {
+
+        // local recursive function
         const walk = (folder, recursive, level) => {
             let collection = [];
 
