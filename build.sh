@@ -19,13 +19,10 @@ createBinary(){
 
 
 #
-
 loadConfig
 
 echo ""
 
 bundle
 createBinary
-
-#cd $DIR
 

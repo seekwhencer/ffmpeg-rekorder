@@ -2,8 +2,8 @@ version: "3.6"
 
 volumes:
   pkg-cache:
-    external:
-      name: ${PROJECT_NAME}_pkg-cache
+    external: true
+    name: ${PROJECT_NAME}_pkg-cache
 
 services:
 
@@ -17,8 +17,6 @@ services:
     working_dir: /rekorder/app
     command: 'tail -f /dev/null'
     #command: "--experimental-modules --experimental-json-modules index.js"
-    #entrypoint: /bin/bash
-    #command: "node --experimental-modules --experimental-json-modules index.js"
     user: root
     volumes:
       - .:/rekorder

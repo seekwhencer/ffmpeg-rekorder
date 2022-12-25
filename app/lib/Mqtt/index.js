@@ -14,6 +14,8 @@ export default class Mqtt extends MODULECLASS {
                     this.client = client;
                     resolve(this);
                 });
+
+
         });
     }
 

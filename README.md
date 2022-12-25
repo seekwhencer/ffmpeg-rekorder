@@ -92,6 +92,22 @@ chmod +x ./setup.sh
     FFmpeg parameter syntax for:`segment_time` ([FFmpeg Documentation](https://ffmpeg.org/ffmpeg-formats.html#toc-segment_002c-stream_005fsegment_002c-ssegment))
   
 
+- `SAMBA_USER`  
+    The network shares username  
+  
+
+- `SAMBA_PW`  
+    The network share userpassword
+  
+
+- `BUILD_TARGET=node16-linux-armv7`   
+  [https://github.com/vercel/pkg#targets](https://github.com/vercel/pkg#targets)
+  
+
+- `BUILD_FILENAME=rekorder`  
+    The binary filename
+
+
 ### `app/config/default.conf`
 
 - `DEBUG`  
@@ -220,11 +236,10 @@ docker-compose -f docker-compose-app.yml up -d
 - edit `docker-compose-app.yml`
 - change: `command: "--experimental-modules --experimental-json-modules index.js"` to `command: "tail -f /dev/null"`
 - start the container: `docker-compose -f docker-compose-app.yml up -d`
-- go into the container: `docker exec -it ffmpeg-rekorder_app /bin/bash`
-- start the app: `node --experimental-modules --experimental-json-modules index.js`
+- start the app: `docker exec -it ffmpeg-rekorder_app sh -c "/usr/local/bin/node --experimental-modules --experimental-json-modules index.js"`
 - stop the app: **CTRL + C**
 
 ### build binary
-- `docker exec ffmpeg-rekorder_app "sh /rekorder/build.sh"`
+- `docker exec -it ffmpeg-rekorder_app sh -c "/rekorder/build.sh"`
 - then a file `rekorder` was created in the `app/` folder
 - use this binary

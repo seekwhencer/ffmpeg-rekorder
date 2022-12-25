@@ -89,10 +89,11 @@ export default class Config extends Module {
         types.boolean.forEach(t => {
             if (Array.isArray(this.configData[t])) {
                 const arr = [];
-                this.configData[t].forEach(i => i === 'true' ? arr.push(true) : arr.push(false) );
+
+                this.configData[t].forEach(i => i.toLowerCase() === 'true' || i === '1' || i.toLowerCase() === 'yes' ? arr.push(true) : arr.push(false) );
                 this.configData[t] = arr;
             } else {
-                this.configData[t] === 'true' ? this.configData[t] = true : this.configData[t] = false;
+                this.configData[t].toLowerCase() === 'true' || this.configData[t] === '1' || this.configData[t].toLowerCase() === 'yes' ? this.configData[t] = true : this.configData[t] = false;
             }
         });
 

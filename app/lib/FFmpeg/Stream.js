@@ -1,6 +1,7 @@
 import {spawn} from 'child_process';
 import fs from 'fs-extra';
 import Storage from './Storage.js';
+import StreamMqtt from './StreamMqtt.js';
 
 export default class FFmpegStream extends MODULECLASS {
     constructor(parent, options) {
@@ -16,20 +17,21 @@ export default class FFmpegStream extends MODULECLASS {
         this.checkInterval = false;
         this.id = this.createHash(this.name);
 
-        LOG(this.label, this.name, 'INIT', this.id);
-
         this.streamUrl = this.streamUrl || false;
 
-        if (!this.streamUrl)
+        if (!this.streamUrl) {
             return Promise.resolve();
+        }
 
-        this.mqttEnable = this.mqttEnable || true;
-        this.mqttTopic = this.mqttTopic || `sensors/camera/${this.name.toLowerCase()}`;
+        // the publishing topics
+        this.mqttTopicRecord = this.mqttTopicRecord || `sensors/camera/${this.name.toLowerCase()}`;
+        this.mqttTopicAvailable = this.mqttTopicAvailable || `sensors/camera/${this.name.toLowerCase()}/available`;
+        this.mqttTopicEnable = this.mqttTopicEnable || `sensors/camera/${this.name.toLowerCase()}/enable`;
+
         this.mqttTopicValueOn = this.mqttTopicValueOn || '1';
         this.mqttTopicValueOff = this.mqttTopicValueOff || '0';
         this.mqttControlTopicValueOn = this.mqttControlTopicValueOn || '1';
         this.mqttControlTopicValueOff = this.mqttControlTopicValueOff || '0';
-        this.mqttControlOptionsTopic = this.mqttControlOptionsTopic || false;
 
         this.snapshotPath = `${STORE_ROOT_PATH}/${this.name}`;
         this.snapshotFilePath = `${this.snapshotPath}/snapshot.png`;
@@ -41,14 +43,20 @@ export default class FFmpegStream extends MODULECLASS {
         this.recordProcess = false;
         this.snapshotProcess = false;
 
+        //
         this.storageAge = this.storageAge || STORAGE_AGE;
         this.storage = new Storage(this);
+
+        if (MQTT_ENABLE)
+            this.mqtt = new StreamMqtt(this);
 
         /**
          * Events
          */
         this.on('enabled', () => {
             LOG(this.label, this.name, 'ENABLED');
+            this.mqtt.enabled();
+
             if (!this.available) {
                 this.checkInterval ? clearInterval(this.checkInterval) : null;
                 this.checkAvailable();
@@ -62,6 +70,7 @@ export default class FFmpegStream extends MODULECLASS {
             LOG(this.label, this.name, 'DISABLED');
             this.stop();
             this.available = false;
+            this.mqtt.disabled();
         });
 
         // if a snapshot was saved - or not
@@ -86,41 +95,43 @@ export default class FFmpegStream extends MODULECLASS {
         this.on('available', () => {
             LOG(this.label, this.name, '- - - IS AVAILABLE NOW - - -');
 
-            if (!this.autoRecord)
-                return;
+            this.mqtt.available();
 
+            if (!this.autoRecord) {
+                return;
+            }
             this.record();
-            this.publish(this.mqttTopic, 1);
         });
 
         // when the cam is not available
         this.on('lost', () => {
             LOG(this.label, this.name, '- - - IS NOT AVAILABLE NOW - - -');
             this.stop();
-            this.publish(this.mqttTopic, 0);
+            this.mqtt.lost();
             this.disable();
         });
 
         this.on('recording', () => {
             LOG(this.label, this.name, 'RECORDING...');
             this.recording = true;
+            this.mqtt.record();
         });
 
         // when the ffmpeg process ends
         this.on('stop', (dataOut, dataErr) => {
             LOG(this.label, this.name, 'STOPPED');
             this.recording = false;
+            this.mqtt.stop();
         });
 
-        // subscribe for the control topic
-        this.subscribeMqttControls();
-        this.listenMqttControls();
+        LOG(this.label, this.name, 'INIT', this.id, 'MQTT ENABLED:', this.mqttEnable);
 
         return new Promise((resolve, reject) => {
             this.enabled ? this.emit('enabled') : null;
             resolve(this);
         });
     }
+
 
     enable() {
         if (this.enabled === true)
@@ -210,50 +221,10 @@ export default class FFmpegStream extends MODULECLASS {
     }
 
     publish(topic, value) {
-        if (!this.mqttEnable || !this.mqttTopic)
+        if (!MQTT_ENABLE)
             return;
 
-        LOG(this.label, this.name, 'PUBLISH', topic, value);
-        APP.MQTT.publish(topic, `${value}`);
-    }
-
-    subscribeMqttControls() {
-        if (!this.mqttEnable)
-            return;
-
-        this.mqttControlTopicEnable ? APP.MQTT.subscribe(this.mqttControlTopicEnable) : null;
-        this.mqttControlTopicRecord ? APP.MQTT.subscribe(this.mqttControlTopicRecord) : null;
-        this.mqttControlOptionsTopic ? APP.MQTT.subscribe(`${this.mqttControlOptionsTopic}/#`) : null;
-    }
-
-    listenMqttControls() {
-        if (!this.mqttEnable)
-            return;
-
-        // when a control instruction comes
-        if (this.mqttControlTopicEnable)
-            APP.MQTT.on(this.mqttControlTopicEnable, data => {
-                LOG(this.label, this.name, 'GOT MESSAGE:', data, 'ON', this.mqttControlTopicEnable);
-                data === this.mqttControlTopicValueOn ? this.enable() : this.disable();
-            });
-
-        // when a control instruction comes
-        if (this.mqttControlTopicRecord)
-            APP.MQTT.on(this.mqttControlTopicRecord, data => {
-                LOG(this.label, this.name, 'GOT MESSAGE:', data, 'ON', this.mqttControlTopicRecord);
-                data === this.mqttControlTopicValueOn ? this.record() : this.stop();
-            });
-
-        // each available option property @TODO
-        if (this.mqttControlOptionsTopic)
-            ['property'].forEach(option => {
-                APP.MQTT.on(`${this.mqttControlOptionsTopic}/${option}`, data => {
-                    LOG(this.label, this.name, 'GOT MESSAGE:', data, 'ON', `${this.mqttControlOptionsTopic}/${option}`);
-                    this[option] = option;
-
-                    // ... or do something
-                });
-            });
+        this.mqtt.publish(topic, value);
     }
 
     get available() {
