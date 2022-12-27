@@ -4,16 +4,19 @@ import Package from '../package.json' assert {type: "json"};
 import path from 'path';
 import * as Ramda from 'ramda';
 
+console.log("");
+console.log("");
+
 !process.env.DEBUG ? global.DEBUG = true : process.env.DEBUG === 'true' ? global.DEBUG = true : global.DEBUG = false;
 process.env.ENVIRONMENT ? global.ENVIRONMENT = process.env.ENVIRONMENT : global.ENVIRONMENT = 'default';
 global.APP_DIR = path.resolve(process.env.PWD);
+global.VERBOSE = parseInt(process.env.VERBOSE);
 
+import Logger from '../../shared/lib/Log.js';
+global.LOGGER = new Logger();
 
-console.log(process.env.DEBUG)
-import Log from '../../shared/lib/Log.js';
-
-global.LOG = new Log().log;
-global.ERROR = new Log().error;
+global.LOG = global.LOGGER.log.bind(global.LOGGER);
+global.ERROR = global.LOGGER.error.bind(global.LOGGER);
 
 process.on('uncaughtException', error => LOG('ERROR:', error));
 process.on('SIGINT', () => {

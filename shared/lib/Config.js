@@ -47,14 +47,14 @@ export default class Config extends Module {
      * @returns {Promise<T>}
      */
     loadAppConfig(configFile, append) {
-        LOG(this.label, 'LOAD', configFile);
+        //LOG(this.label, 'LOAD', configFile);
         !append ? append = false : null;
 
         return fs.readFile(configFile)
             .then(configData => {
                 const config = dotenv.parse(configData);
                 append === true ? this.configData = Object.assign(this.configData, config) : this.configData = config;
-                LOG(this.label, 'LOADED', configFile);
+                LOG(this.label, 'LOADED', configFile, {verbose:1});
             })
             .catch(err => {
                 ERROR(this.label, err);
@@ -109,12 +109,15 @@ export default class Config extends Module {
     }
 
     setConfigToGlobalScope() {
-        const globalKeys = Object.keys(global);
-        Object.keys(this.configData).forEach(k => globalKeys.includes(k) ? false : global[k] = this.configData[k]);
+        //const globalKeys = Object.keys(global);
+        //Object.keys(this.configData).forEach(k => globalKeys.includes(k.toUpperCase()) ? false : global[k.toUpperCase()] = this.configData[k.toUpperCase()]);
+
+        // override props
+        Object.keys(this.configData).forEach(k => global[k.toUpperCase()] = this.configData[k]);
     }
 
     postProcess() {
-        //
+        LOG(this.label, 'VERBOSE LEVEL FROM CONFIG', VERBOSE);
     }
 
 }

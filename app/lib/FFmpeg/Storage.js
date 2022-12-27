@@ -34,7 +34,7 @@ export default class extends MODULECLASS {
                 };
             });
 
-            LOG(this.label, this.stream.name, 'GOT', this.files.length, 'FILES IN', this.stream.recordPath, 'TO DROP', this.files.filter(f => f.toDrop).length);
+            LOG(this.label, this.stream.name, 'GOT', this.files.length, 'FILES IN', this.stream.recordPath, 'TO DROP', this.files.filter(f => f.toDrop).length, {verbose: 2});
 
             // finally ;)
             this.dropFiles();
@@ -42,9 +42,9 @@ export default class extends MODULECLASS {
     }
 
     dropFiles() {
-        LOG(this.label, this.stream.name, 'DROPPING FILES IF NECESSARY');
+        LOG(this.label, this.stream.name, 'DROPPING FILES IF NECESSARY', {verbose: 2});
         this.files.filter(f => f.toDrop).forEach(file => {
-            LOG(this.label, this.stream.name, 'DROPPING', file.filePath);
+            LOG(this.label, this.stream.name, 'DROPPING', file.filePath, {verbose: 2});
             fs.remove(file.filePath);
         });
     }
@@ -54,7 +54,7 @@ export default class extends MODULECLASS {
         const duration = Temporal.Duration.from(this.stream.storageAge);
         const result = now.subtract(duration);
         this.clearDateTime = result.toString();
-        LOG(this.label, this.stream.name, 'DROP RECORDINGS OLDER THEN', this.clearDateTime);
+        LOG(this.label, this.stream.name, 'DROP RECORDINGS OLDER THEN', this.clearDateTime, {verbose: 2});
 
         this
             .collect(this.stream.recordPath, false, this.includes)
@@ -122,7 +122,7 @@ export default class extends MODULECLASS {
                                     });
 
                                     if (recursive === true || level < depth) {
-                                        LOG(this.label, this.stream.name, 'DEPTH PATH', level, itemPath);
+                                        LOG(this.label, this.stream.name, 'DEPTH PATH', level, itemPath, {verbose: 2});
                                         item.childs = walk(itemPath, recursive, level + 1);
                                     }
 
@@ -150,18 +150,18 @@ export default class extends MODULECLASS {
                             }
 
                         } catch (err) {
-                            LOG(this.label, this.stream.name, 'NOT READABLE', itemPath, err);
+                            LOG(this.label, this.stream.name, 'NOT READABLE', itemPath, err, {verbose: 2});
                             collection = walk(itemPath, recursive, level + 1);
                         }
                     } else {
-                        LOG(this.label, this.stream.name, 'NOT EXISTS', itemPath);
+                        LOG(this.label, this.stream.name, 'NOT EXISTS', itemPath, {verbose: 2});
                         collection = walk(itemPath, recursive, level + 1);
                     }
 
 
                 });
             } else {
-                LOG(this.label, this.stream.name, 'NOT EXISTS ', folder);
+                LOG(this.label, this.stream.name, 'NOT EXISTS ', folder, {verbose: 2});
             }
 
             return collection;

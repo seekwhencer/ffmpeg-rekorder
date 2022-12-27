@@ -54,8 +54,9 @@ export default class FFmpegStream extends MODULECLASS {
          * Events
          */
         this.on('enabled', () => {
-            LOG(this.label, this.name, 'ENABLED');
-            this.mqtt.enabled();
+            LOG(this.label, this.name, 'ENABLED', {verbose: 2});
+
+            this.mqtt ? this.mqtt.enabled() : null;
 
             if (!this.available) {
                 this.checkInterval ? clearInterval(this.checkInterval) : null;
@@ -67,10 +68,10 @@ export default class FFmpegStream extends MODULECLASS {
         });
 
         this.on('disabled', () => {
-            LOG(this.label, this.name, 'DISABLED');
+            LOG(this.label, this.name, 'DISABLED', {verbose: 2});
             this.stop();
             this.available = false;
-            this.mqtt.disabled();
+            this.mqtt ? this.mqtt.disabled() : null;
         });
 
         // if a snapshot was saved - or not
@@ -93,9 +94,9 @@ export default class FFmpegStream extends MODULECLASS {
 
         // when the cam is available
         this.on('available', () => {
-            LOG(this.label, this.name, '- - - IS AVAILABLE NOW - - -');
+            LOG(this.label, this.name, '- - - IS AVAILABLE NOW - - -', {verbose: 2});
 
-            this.mqtt.available();
+            this.mqtt ? this.mqtt.available() : null;
 
             if (!this.autoRecord) {
                 return;
@@ -105,23 +106,23 @@ export default class FFmpegStream extends MODULECLASS {
 
         // when the cam is not available
         this.on('lost', () => {
-            LOG(this.label, this.name, '- - - IS NOT AVAILABLE NOW - - -');
+            LOG(this.label, this.name, '- - - IS NOT AVAILABLE NOW - - -', {verbose: 2});
             this.stop();
-            this.mqtt.lost();
+            this.mqtt ? this.mqtt.lost() : null;
             this.disable();
         });
 
         this.on('recording', () => {
-            LOG(this.label, this.name, 'RECORDING...');
+            LOG(this.label, this.name, 'RECORDING...', {verbose: 2});
             this.recording = true;
-            this.mqtt.record();
+            this.mqtt ? this.mqtt.record() : null;
         });
 
         // when the ffmpeg process ends
         this.on('stop', (dataOut, dataErr) => {
-            LOG(this.label, this.name, 'STOPPED');
+            LOG(this.label, this.name, 'STOPPED', {verbose: 2});
             this.recording = false;
-            this.mqtt.stop();
+            this.mqtt ? this.mqtt.stop() : null;
         });
 
         LOG(this.label, this.name, 'INIT', this.id, 'MQTT ENABLED:', this.mqttEnable);
@@ -153,7 +154,7 @@ export default class FFmpegStream extends MODULECLASS {
         if (!this.enabled)
             return;
 
-        LOG(this.label, this.name, 'CHECK IF IS AVAILABLE');
+        LOG(this.label, this.name, 'CHECK IF IS AVAILABLE', {verbose: 2});
 
         this.snapshotProcess ? this.snapshotProcess.kill('SIGINT') : null;
 
@@ -194,16 +195,16 @@ export default class FFmpegStream extends MODULECLASS {
         this.recordProcess.on('spawn', () => this.emit('recording'));
 
         this.recordProcess.stdout.on('data', chunk => {
-            dataOut += chunk;
-            //LOG(chunk);
+            dataOut += chunk.toString();
+            LOG(this.label, this.name, chunk.toString(), {verbose: 3});
         });
         this.recordProcess.stderr.on('data', chunk => {
-            dataErr += chunk;
-            //LOG(chunk.toString());
+            dataErr += chunk.toString();
+            LOG(this.label, this.name, chunk.toString(), {verbose: 3});
         });
         this.recordProcess.stdin.on('data', chunk => {
-            dataIn += chunk;
-            //LOG(chunk.toString());
+            dataIn += chunk.toString();
+            LOG(this.label, this.name, chunk.toString(), {verbose: 3});
         });
         this.recordProcess.stdout.on('end', () => this.emit('stop', dataOut, dataErr));
     }
@@ -215,13 +216,13 @@ export default class FFmpegStream extends MODULECLASS {
         if (!this.available)
             return;
 
-        LOG(this.label, this.name, 'STOPPING...', 'PID:', this.recordProcess.pid);
+        LOG(this.label, this.name, 'STOPPING...', 'PID:', this.recordProcess.pid, {verbose: 2});
         this.recordProcess.kill('SIGINT');
         setTimeout(() => this.recordProcess = false, 2000);
     }
 
     publish(topic, value) {
-        if (!MQTT_ENABLE)
+        if (!this.mqtt)
             return;
 
         this.mqtt.publish(topic, value);

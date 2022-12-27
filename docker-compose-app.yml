@@ -26,6 +26,7 @@ services:
       - pkg-cache:/root/.pkg-cache
     environment:
       - DEBUG=true
+      - VERBOSE=1
       - ENVIRONMENT=default
       - NODE_ENV=development
       - PWD=/rekorder/app

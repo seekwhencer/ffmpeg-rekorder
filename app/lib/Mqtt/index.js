@@ -9,6 +9,9 @@ export default class Mqtt extends MODULECLASS {
             LOG(this.label, 'INIT');
             this.parent = parent;
 
+            if (!MQTT_ENABLE)
+                resolve(false);
+
             new MqttClient(this)
                 .then(client => {
                     this.client = client;
