@@ -54,6 +54,22 @@ chmod +x ./setup.sh
 
 ## Config
 
+#### Environment
+
+There are **three** possibilities to put config parameters in the app.
+
+- at first, the `app/config/ENVIRONMENT.conf` will be loaded
+- the `ENVIRONMENT` comes from the environment as variable `ENVIRONMENT`
+- the `ENVIRONMEMT` is a string and equals the filename: `app/config/ENVIRONMENT.conf`
+- then the `.env` file will be loaded and override existing values
+- at last, the environment variables override existing parameters
+
+> 1) config file  
+> 2) .env file  
+> 3) env variables  
+
+Environment variables comes from the docker-compose file.
+
 #### Duplicate
 - from `.env.example` to `.env`
 - from `dnsmasq/example.conf` to `dnsmasq/dnsmasq.conf`

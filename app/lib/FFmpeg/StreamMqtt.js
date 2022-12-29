@@ -13,13 +13,15 @@ export default class FFmpegStreamMqtt extends MODULECLASS {
 
         this.mqttControlTopicEnable = this.stream.mqttControlTopicEnable;
         this.mqttControlTopicRecord = this.stream.mqttControlTopicRecord;
-
-        this.mqttTopicValueOn = this.stream.mqttTopicValueOn;
-        this.mqttTopicValueOff = this.stream.mqttTopicValueOff;
-        this.mqttControlTopicValueOn = this.stream.mqttControlTopicValueOn;
-        this.mqttControlTopicValueOff = this.stream.mqttControlTopicValueOff;
-
         this.mqttControlOptionsTopic = this.stream.mqttControlOptionsTopic;
+
+        // convert true / false back to '1' and '0'
+        [
+            'mqttTopicValueOn',
+            'mqttTopicValueOff',
+            'mqttControlTopicValueOn',
+            'mqttControlTopicValueOff'
+        ].forEach(f => this.stream[f] === true ? this[f] = '1' : this[f] = '0');
 
         LOG(this.label, this.stream.name, 'INIT', this.stream.id);
 
@@ -77,27 +79,27 @@ export default class FFmpegStreamMqtt extends MODULECLASS {
     }
 
     enabled() {
-        this.publish(this.mqttTopicEnable, this.mqttTopicValueOn);
+        this.publish(this.mqttTopicEnable, `${this.mqttTopicValueOn}`);
     }
 
     disabled() {
-        this.publish(this.mqttTopicEnable, this.mqttTopicValueOff);
+        this.publish(this.mqttTopicEnable, `${this.mqttTopicValueOff}`);
     }
 
     available() {
-        this.publish(this.mqttTopicAvailable, this.mqttTopicValueOn);
+        this.publish(this.mqttTopicAvailable, `${this.mqttTopicValueOn}`);
     }
 
     lost() {
-        this.publish(this.mqttTopicAvailable, this.mqttTopicValueOff);
+        this.publish(this.mqttTopicAvailable, `${this.mqttTopicValueOff}`);
     }
 
     record() {
-        this.publish(this.mqttTopicRecord, this.mqttTopicValueOn);
+        this.publish(this.mqttTopicRecord, `${this.mqttTopicValueOn}`);
     }
 
     stop() {
-        this.publish(this.mqttTopicRecord, this.mqttTopicValueOff);
+        this.publish(this.mqttTopicRecord, `${this.mqttTopicValueOff}`);
     }
 
 

@@ -18,6 +18,8 @@ services:
     command: 'tail -f /dev/null'
     #command: "--experimental-modules --experimental-json-modules index.js"
     user: root
+    ports:
+      - "3000:3000"
     volumes:
       - .:/rekorder
       - /rekorder/app/node_modules
@@ -26,7 +28,7 @@ services:
       - pkg-cache:/root/.pkg-cache
     environment:
       - DEBUG=true
-      - VERBOSE=1
+      - VERBOSE=2
       - ENVIRONMENT=default
       - NODE_ENV=development
       - PWD=/rekorder/app

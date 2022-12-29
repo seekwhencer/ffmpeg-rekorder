@@ -19,6 +19,10 @@ export default class Config extends Module {
             this.configFile = `${this.path}/${ENVIRONMENT}.conf`;
             this.envFile = `${path.resolve(`${APP_DIR}/..`)}/.env`;
 
+            this.on('loaded', () => {
+                LOG(this.label, 'LOADING COMPLETE', {verbose: 2});
+            });
+
             this.load().then(success => resolve(this));
         });
     }
@@ -33,6 +37,8 @@ export default class Config extends Module {
                 this.convertTypes();            // convert boolean and integer values
                 this.setConfigToGlobalScope();  // assign the config keys to the global scope
                 this.postProcess();             // do things with the final config keys
+
+                this.emit('loaded');
 
                 return Promise.resolve(true);
             });
@@ -54,7 +60,7 @@ export default class Config extends Module {
             .then(configData => {
                 const config = dotenv.parse(configData);
                 append === true ? this.configData = Object.assign(this.configData, config) : this.configData = config;
-                LOG(this.label, 'LOADED', configFile, {verbose:1});
+                LOG(this.label, 'LOADED', configFile, {verbose: 1});
             })
             .catch(err => {
                 ERROR(this.label, err);
@@ -90,7 +96,7 @@ export default class Config extends Module {
             if (Array.isArray(this.configData[t])) {
                 const arr = [];
 
-                this.configData[t].forEach(i => i.toLowerCase() === 'true' || i === '1' || i.toLowerCase() === 'yes' ? arr.push(true) : arr.push(false) );
+                this.configData[t].forEach(i => i.toLowerCase() === 'true' || i === '1' || i.toLowerCase() === 'yes' ? arr.push(true) : arr.push(false));
                 this.configData[t] = arr;
             } else {
                 this.configData[t].toLowerCase() === 'true' || this.configData[t] === '1' || this.configData[t].toLowerCase() === 'yes' ? this.configData[t] = true : this.configData[t] = false;
