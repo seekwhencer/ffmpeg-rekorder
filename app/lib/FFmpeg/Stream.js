@@ -28,11 +28,6 @@ export default class FFmpegStream extends MODULECLASS {
         this.mqttTopicAvailable = this.mqttTopicAvailable || `sensors/camera/${this.name.toLowerCase()}/available`;
         this.mqttTopicEnable = this.mqttTopicEnable || `sensors/camera/${this.name.toLowerCase()}/enable`;
 
-        this.mqttTopicValueOn = this.mqttTopicValueOn || '1';
-        this.mqttTopicValueOff = this.mqttTopicValueOff || '0';
-        this.mqttControlTopicValueOn = this.mqttControlTopicValueOn || '1';
-        this.mqttControlTopicValueOff = this.mqttControlTopicValueOff || '0';
-
         this.snapshotPath = `${STORE_ROOT_PATH}/${this.name}`;
         this.snapshotFilePath = `${this.snapshotPath}/snapshot.png`;
 

@@ -80,7 +80,6 @@ export default class Module extends Events {
 
     registerOptionsAsFields(options) {
         Object.keys(options).forEach(k => {
-            //
             options[k] === '1' || options[k] === 'yes' || options[k] === 'true' ? options[k] = true : null;
             options[k] === '0' || options[k] === 'no' || options[k] === 'false' ? options[k] = false : null;
         });

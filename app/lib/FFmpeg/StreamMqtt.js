@@ -19,8 +19,8 @@ export default class FFmpegStreamMqtt extends MODULECLASS {
         [
             'mqttTopicValueOn',
             'mqttTopicValueOff',
-            'mqttControlTopicValueOn',
-            'mqttControlTopicValueOff'
+            'mqttControlValueOn',
+            'mqttControlValueOff'
         ].forEach(f => this.stream[f] === true ? this[f] = '1' : this[f] = '0');
 
         LOG(this.label, this.stream.name, 'INIT', this.stream.id);
@@ -55,15 +55,15 @@ export default class FFmpegStreamMqtt extends MODULECLASS {
         // when a control instruction comes
         if (this.mqttControlTopicEnable)
             APP.MQTT.on(this.mqttControlTopicEnable, data => {
-                LOG(this.label, this.stream.name, 'GOT MESSAGE:', data, 'ON', this.mqttControlTopicEnable, {verbose: 2});
-                data === this.mqttControlTopicValueOn ? this.stream.enable() : this.stream.disable();
+                LOG(this.label, this.stream.name, 'GOT MESSAGE:', data, 'ON', this.mqttControlTopicEnable, this.mqttControlValueOn, {verbose: 2});
+                data === this.mqttControlValueOn ? this.stream.enable() : this.stream.disable();
             });
 
         // when a control instruction comes
         if (this.mqttControlTopicRecord)
             APP.MQTT.on(this.mqttControlTopicRecord, data => {
                 LOG(this.label, this.stream.name, 'GOT MESSAGE:', data, 'ON', this.mqttControlTopicRecord, {verbose: 2});
-                data === this.mqttControlTopicValueOn ? this.stream.record() : this.stream.stop();
+                data === this.mqttControlValueOn ? this.stream.record() : this.stream.stop();
             });
 
         // each available option property @TODO
